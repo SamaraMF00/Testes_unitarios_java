@@ -1,18 +1,33 @@
+/*
+ * author: Samara Martins Ferreira
+ * date: 26/08/2022
+ */
+
 public class Microondas {
 
-    public Microondas() {
-        vLigado = false;
-        vPortaAberta = true;
-    }
-
-    private int vSegPecorridos = 0,
-            vMinPercorridos = 0,
-            vSegPausa = 0,
-            vMinPausa = 0;
+    // #region atributos
+    private int vSegPecorridos,
+            vMinPercorridos;
 
     private boolean vLigado,
             vPortaAberta,
             vPausado;
+
+    // constantes
+    private static final int SEGUNDOS_PARA_CONVERSAO = 60;
+    private static final String MENSAGEM_PORTA_ABERTA = "FECHE A PORTA PARA LIGAR";
+    private static final String MENSAGEM_FORMATO_INVALIDO = "FORMATO INVÁLIDO";
+    // #endregion
+
+    // #region construtores
+    public Microondas() {
+        vLigado = false;
+        vPausado = false;
+        vPortaAberta = true;
+        vSegPecorridos = 0;
+        vMinPercorridos = 0;
+    }
+    // #endregion
 
     /**
      * Método para ligar o microondas. Deve ser informado o tempo de pausa caso
@@ -30,30 +45,55 @@ public class Microondas {
     public String iniciaCronometro(int min, int seg, int minPausa, int segPausa) {
 
         if (vPortaAberta)
-            return "FECHE A PORTA PARA LIGAR";
+            return MENSAGEM_PORTA_ABERTA;
+
+        if (!formatoValido(min, minPausa))
+            return MENSAGEM_FORMATO_INVALIDO;
+
+        seg += converteMinParaSeg(min);
+        segPausa += converteMinParaSeg(minPausa);
 
         vSegPecorridos = seg;
-        vMinPercorridos = min;
-        vMinPausa = minPausa;
-        vSegPausa = segPausa;
-
-        if (!formatoValido())
-            return "FORMATO INVÁLIDO";
+        vMinPercorridos = 0;
 
         ligaDesligar(true);
 
-        while ((vSegPecorridos > vSegPausa && vMinPercorridos >= vMinPausa) ||
-                (vSegPecorridos == 0 && vMinPercorridos > 0)) {
+        while (vSegPecorridos > segPausa) {
             passaTempo();
         }
 
         if (vSegPecorridos == 0 && vMinPercorridos == 0)
             vLigado = false;
-        else
+        else {
             vPausado = true;
+            converteTempoPecorrido();
+        }
 
         return String.format("%02d", vMinPercorridos) + ":" +
                 String.format("%02d", vSegPecorridos);
+    }
+
+    /**
+     * Método para converter minutos em segundos
+     * 
+     * @param min minutos para conversão
+     * @return segundos convertidos
+     */
+    private int converteMinParaSeg(int min) {
+        if (min > 0)
+            return min * SEGUNDOS_PARA_CONVERSAO;
+        else
+            return 0;
+    }
+
+    /**
+     * Método para converter o tempo percorrido de segundos para minutos.
+     */
+    private void converteTempoPecorrido() {
+        if (vSegPecorridos >= SEGUNDOS_PARA_CONVERSAO) {
+            vMinPercorridos = vSegPecorridos / SEGUNDOS_PARA_CONVERSAO;
+            vSegPecorridos = vSegPecorridos % SEGUNDOS_PARA_CONVERSAO;
+        }
     }
 
     /**
@@ -61,11 +101,6 @@ public class Microondas {
      */
     private void passaTempo() {
         vSegPecorridos--;
-
-        if (vSegPecorridos < 0 && vMinPercorridos > 0) {
-            vMinPercorridos--;
-            vSegPecorridos = 59;
-        }
     }
 
     /**
@@ -74,21 +109,11 @@ public class Microondas {
      * 
      * @return true se formato válido e false se formato inválido.
      */
-    private boolean formatoValido() {
-
-        if (vMinPercorridos > 59 || vMinPausa > 59)
+    private boolean formatoValido(int minPecorrido, int minPausa) {
+        if (minPecorrido >= SEGUNDOS_PARA_CONVERSAO || minPausa >= SEGUNDOS_PARA_CONVERSAO)
             return false;
-
-        if (vSegPecorridos >= 60) {
-            vMinPercorridos = vSegPecorridos / 60;
-            vSegPecorridos = vSegPecorridos % 60;
-        }
-
-        if (vSegPausa >= 60) {
-            vMinPausa = vSegPausa / 60;
-            vSegPausa = vSegPausa % 60;
-        }
-        return true;
+        else
+            return true;
     }
 
     /**
@@ -99,7 +124,7 @@ public class Microondas {
      *         "FECHE A PORTA PARA LIGAR" caso a porta esteja aberta.
      */
     public String retomarCronometro() {
-        return iniciaCronometro(vMinPausa, vSegPausa, 0, 0);
+        return iniciaCronometro(vMinPercorridos, vSegPecorridos, 0, 0);
     }
 
     /**
