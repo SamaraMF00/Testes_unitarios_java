@@ -6,13 +6,6 @@ import org.junit.Test;
 
 public class MicroondasTestes {
 
-    private Microondas microondas;
-
-    // @BeforeAll
-    // public void init(){
-    //      microondas = new Microondas();
-    // } TENTEI USAR MAS O VS. CODE NÃO RECONHECEU
-
     @Test
     public void testeIniciarCronometroValorValido(){
         microondas = new Microondas();
